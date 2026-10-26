@@ -1,0 +1,12 @@
+{% extends "auth_base.html" %}
+{% block title %}Set your password{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ account.display_name }}</h1>
+<p class="sub">A court registered a case for you. Choose a password to open your account.</p>
+<form method="post">
+  {% csrf_token %}
+  {% include "partials/form_fields.html" %}
+  <button class="btn btn-primary w-100">Set password and verify</button>
+</form>
+{% endblock %}

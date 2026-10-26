@@ -1,0 +1,13 @@
+{% extends "auth_base.html" %}
+{% block title %}Lawyer sign up{% endblock %}
+
+{% block content %}
+<h1>Lawyer sign up</h1>
+<p class="sub">The admin checks your Bar ID before you can request cases.</p>
+<form method="post">
+  {% csrf_token %}
+  {% include "partials/form_fields.html" %}
+  <button class="btn btn-primary w-100">Create account</button>
+</form>
+<p class="mt-4 mb-0 text-muted">Already registered? <a href="{% url 'accounts:login' %}">Log in</a></p>
+{% endblock %}
