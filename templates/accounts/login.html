@@ -1,0 +1,13 @@
+{% extends "auth_base.html" %}
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+<h1>Log in</h1>
+<p class="sub">Use the email address your account was made with.</p>
+<form method="post">
+  {% csrf_token %}
+  {% include "partials/form_fields.html" %}
+  <button class="btn btn-primary w-100">Log in</button>
+</form>
+<p class="mt-4 mb-0 text-muted">Are you a lawyer? <a href="{% url 'accounts:register' %}">Create an account</a>. Clients get a link from the court.</p>
+{% endblock %}

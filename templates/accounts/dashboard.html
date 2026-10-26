@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hello, {{ user.display_name }}</h1>
+    <p class="sub">
+      {% if user.is_superuser %}You manage lawyers, courts and court staff.
+      {% elif user.role == "court_staff" %}{{ user.staff.court.name }}
+      {% elif user.role == "client" %}Here is where your cases stand.
+      {% elif user.role == "lawyer" %}Find cases, answer clients and keep track of hearings.{% endif %}
+    </p>
+  </div>
+  <div class="page-actions">
+    {% if user.role == "court_staff" %}
+      <a class="btn btn-primary" href="{% url 'cases:create' %}"><i class="bi bi-plus-lg"></i> Register case</a>
+    {% elif user.role == "lawyer" %}
+      <a class="btn btn-primary" href="{% url 'cases:available' %}"><i class="bi bi-search"></i> Browse open cases</a>
+    {% elif user.role == "client" %}
+      <a class="btn btn-primary" href="{% url 'accounts:lawyer_list' %}"><i class="bi bi-people"></i> Find lawyers</a>
+    {% elif user.is_superuser %}
+      <a class="btn btn-primary" href="{% url 'accounts:approvals' %}"><i class="bi bi-patch-check"></i> Review lawyers</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if user.role == "lawyer" and not user.is_verified %}
+  <div class="alert alert-warning">Your account is waiting for the admin to verify your Bar ID. You can edit your profile, but you cannot see open cases yet.</div>
+{% endif %}
+
+<div class="stats">
+  {% for label, number in stats %}
+    <div class="stat"><div class="num">{{ number }}</div><div class="lbl">{{ label }}</div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="panel">
+      <div class="panel-head"><h2>Upcoming hearings</h2><a href="{% url 'cases:schedule' %}">See all</a></div>
+      <div class="panel-body flush">
+        {% for hearing in hearings %}
+          <div class="row-item">
+            <div class="datebox"><b>{{ hearing.scheduled_at|date:"j" }}</b><small>{{ hearing.scheduled_at|date:"M" }}</small></div>
+            <div class="grow">
+              <a href="{% url 'cases:detail' hearing.case.pk %}">{{ hearing.title }}</a>
+              <div class="sub">{{ hearing.case.case_number }} at {{ hearing.scheduled_at|date:"H:i" }}{% if hearing.room %}, {{ hearing.room }}{% endif %}</div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-calendar2-check"></i>No hearings are scheduled.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="panel">
+      <div class="panel-head"><h2>Latest notifications</h2><a href="{% url 'notifications:list' %}">See all</a></div>
+      <div class="panel-body flush">
+        {% for note in notifications %}
+          <div class="row-item">
+            <i class="bi {{ note.icon }}" style="color: var(--ink-soft)"></i>
+            <div class="grow">
+              <a href="{% url 'notifications:open' note.pk %}" {% if not note.is_read %}style="font-weight: 600"{% endif %}>{{ note.message|truncatechars:80 }}</a>
+              <div class="sub">{{ note.created_at|timesince }} ago</div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-bell"></i>Nothing new.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
