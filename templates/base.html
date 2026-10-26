@@ -1,0 +1,115 @@
+{% load static ui %}
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}Justice Connect{% endblock %} | Justice Connect</title>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="{% url 'accounts:dashboard' %}">
+    <b>Justice Connect</b>
+    <span>Case management for courts</span>
+  </a>
+
+  <nav>
+    <div class="nav-group">
+      <a class="nav-item {% active 'accounts:dashboard' %}" href="{% url 'accounts:dashboard' %}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    </div>
+
+    {% if user.is_superuser %}
+      <div class="nav-group">
+        <small>Administration</small>
+        <a class="nav-item {% active 'accounts:approvals' %}" href="{% url 'accounts:approvals' %}"><i class="bi bi-patch-check"></i> Lawyer approvals</a>
+        <a class="nav-item {% active 'cases:area_list' 'cases:area_create' 'cases:area_edit' 'cases:area_delete' %}" href="{% url 'cases:area_list' %}"><i class="bi bi-geo-alt"></i> Areas</a>
+        <a class="nav-item {% active 'cases:court_list' 'cases:court_create' 'cases:court_edit' 'cases:court_delete' %}" href="{% url 'cases:court_list' %}"><i class="bi bi-bank"></i> Courts</a>
+        <a class="nav-item {% active 'cases:staff_list' 'cases:staff_create' 'cases:staff_edit' 'cases:staff_delete' %}" href="{% url 'cases:staff_list' %}"><i class="bi bi-person-badge"></i> Court staff</a>
+      </div>
+      <div class="nav-group">
+        <small>Records</small>
+        <a class="nav-item {% active 'cases:list' 'cases:detail' %}" href="{% url 'cases:list' %}"><i class="bi bi-folder2"></i> All cases</a>
+        <a class="nav-item {% active 'accounts:lawyer_list' 'accounts:lawyer_detail' %}" href="{% url 'accounts:lawyer_list' %}"><i class="bi bi-people"></i> Lawyers</a>
+        <a class="nav-item" href="/admin/"><i class="bi bi-gear"></i> Django admin</a>
+      </div>
+
+    {% elif user.role == "court_staff" %}
+      <div class="nav-group">
+        <small>My court</small>
+        <a class="nav-item {% active 'cases:list' 'cases:detail' 'cases:edit' 'cases:delete' %}" href="{% url 'cases:list' %}"><i class="bi bi-folder2"></i> Cases</a>
+        <a class="nav-item {% active 'cases:create' %}" href="{% url 'cases:create' %}"><i class="bi bi-plus-square"></i> Register case</a>
+        <a class="nav-item {% active 'cases:schedule' %}" href="{% url 'cases:schedule' %}"><i class="bi bi-calendar-event"></i> Hearings</a>
+        <a class="nav-item {% active 'cases:holiday_list' 'cases:holiday_add' 'cases:holiday_edit' 'cases:holiday_delete' %}" href="{% url 'cases:holiday_list' %}"><i class="bi bi-calendar-x"></i> Holidays</a>
+        <a class="nav-item {% active 'cases:court_report' %}" href="{% url 'cases:court_report' %}"><i class="bi bi-bar-chart"></i> Court report</a>
+      </div>
+
+    {% elif user.role == "client" %}
+      <div class="nav-group">
+        <small>My cases</small>
+        <a class="nav-item {% active 'cases:list' 'cases:detail' %}" href="{% url 'cases:list' %}"><i class="bi bi-folder2"></i> Cases</a>
+        <a class="nav-item {% active 'cases:schedule' %}" href="{% url 'cases:schedule' %}"><i class="bi bi-calendar-event"></i> Hearings</a>
+        <a class="nav-item {% active 'cases:client_requests' %}" href="{% url 'cases:client_requests' %}"><i class="bi bi-person-raised-hand"></i> Lawyer requests</a>
+        <a class="nav-item {% active 'cases:appointment_list' %}" href="{% url 'cases:appointment_list' %}"><i class="bi bi-clock"></i> Appointments</a>
+        <a class="nav-item {% active 'accounts:lawyer_list' 'accounts:lawyer_detail' %}" href="{% url 'accounts:lawyer_list' %}"><i class="bi bi-people"></i> Find lawyers</a>
+      </div>
+
+    {% elif user.role == "lawyer" %}
+      <div class="nav-group">
+        <small>Work</small>
+        <a class="nav-item {% active 'cases:available' %}" href="{% url 'cases:available' %}"><i class="bi bi-search"></i> Open cases</a>
+        <a class="nav-item {% active 'cases:my_requests' %}" href="{% url 'cases:my_requests' %}"><i class="bi bi-person-raised-hand"></i> My requests</a>
+        <a class="nav-item {% active 'cases:list' 'cases:detail' %}" href="{% url 'cases:list' %}"><i class="bi bi-folder2"></i> My cases</a>
+        <a class="nav-item {% active 'cases:schedule' %}" href="{% url 'cases:schedule' %}"><i class="bi bi-calendar-event"></i> Hearings</a>
+        <a class="nav-item {% active 'cases:appointment_list' %}" href="{% url 'cases:appointment_list' %}"><i class="bi bi-clock"></i> Appointments</a>
+      </div>
+      <div class="nav-group">
+        <small>Profile</small>
+        <a class="nav-item {% active 'accounts:lawyer_detail' 'accounts:profile_edit' %}" href="{% url 'accounts:lawyer_detail' user.lawyer.pk %}"><i class="bi bi-person-vcard"></i> My profile</a>
+        <a class="nav-item {% active 'accounts:lawyer_list' %}" href="{% url 'accounts:lawyer_list' %}"><i class="bi bi-people"></i> Lawyers</a>
+      </div>
+    {% endif %}
+
+    <div class="nav-group">
+      <a class="nav-item {% active 'notifications:list' %}" href="{% url 'notifications:list' %}">
+        <i class="bi bi-bell"></i> Notifications
+        {% if unread_count %}<span class="count">{{ unread_count }}</span>{% endif %}
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="sidebar-user">
+      <span class="avatar">{{ user.display_name|initials }}</span>
+      <span>{{ user.display_name }}<small>{% if user.is_superuser %}Admin{% else %}{{ user.get_role_display }}{% endif %}</small></span>
+    </div>
+    {% if user.role == "client" %}
+      <a class="nav-item {% active 'accounts:client_profile_edit' %}" href="{% url 'accounts:client_profile_edit' %}"><i class="bi bi-person"></i> My details</a>
+    {% endif %}
+    <a class="nav-item {% active 'accounts:change_password' %}" href="{% url 'accounts:change_password' %}"><i class="bi bi-key"></i> Change password</a>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button class="nav-item"><i class="bi bi-box-arrow-right"></i> Log out</button>
+    </form>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="btn btn-outline-secondary btn-sm menu-btn" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu"><i class="bi bi-list"></i></button>
+    <a class="bell" href="{% url 'notifications:list' %}" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      {% if unread_count %}<span class="dot">{{ unread_count }}</span>{% endif %}
+    </a>
+  </header>
+
+  <main class="content">
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>
