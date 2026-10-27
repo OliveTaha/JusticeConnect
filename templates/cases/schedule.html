@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Hearings{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Hearings</h1><p class="sub">Dates set by the court for your cases.</p></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Coming up</h2></div>
+  <div class="panel-body flush">
+    {% for hearing in upcoming %}
+      <div class="row-item">
+        <div class="datebox"><b>{{ hearing.scheduled_at|date:"j" }}</b><small>{{ hearing.scheduled_at|date:"M" }}</small></div>
+        <div class="grow">
+          <a href="{% url 'cases:detail' hearing.case.pk %}">{{ hearing.title }}</a>
+          <div class="sub">{{ hearing.case.case_number }}, {{ hearing.case.title }}</div>
+        </div>
+        <div class="sub text-end">{{ hearing.scheduled_at|date:"l, H:i" }}<br>{{ hearing.case.court.name }}{% if hearing.room %}, {{ hearing.room }}{% endif %}</div>
+      </div>
+    {% empty %}
+      <div class="empty"><i class="bi bi-calendar2-check"></i>No hearing is scheduled.</div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if past %}
+  <div class="panel">
+    <div class="panel-head"><h2>Earlier</h2></div>
+    <div class="panel-body flush">
+      {% for hearing in past %}
+        <div class="row-item">
+          <div class="datebox past"><b>{{ hearing.scheduled_at|date:"j" }}</b><small>{{ hearing.scheduled_at|date:"M" }}</small></div>
+          <div class="grow">
+            <a href="{% url 'cases:detail' hearing.case.pk %}">{{ hearing.title }}</a>
+            <div class="sub">{{ hearing.case.case_number }}, {{ hearing.case.title }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
