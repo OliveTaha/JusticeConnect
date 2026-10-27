@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ lawyer.name }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-body">
+    <div class="profile-head">
+      <span class="avatar lg">
+        {% if profile.photo %}<img src="{{ profile.photo.url }}" alt="{{ lawyer.name }}">{% else %}{{ lawyer.name|initials }}{% endif %}
+      </span>
+      <div class="grow" style="flex: 1">
+        <h1>{{ lawyer.name }}</h1>
+        <div class="text-muted">{{ profile.specialization|default:"General practice" }} | Bar ID {{ lawyer.bar_id }}</div>
+      </div>
+      {% if user == lawyer.account %}
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:profile_edit' %}"><i class="bi bi-pencil"></i> Edit profile</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="stats" style="grid-template-columns: repeat(3, 1fr)">
+  <div class="stat"><div class="num">{{ profile.experience }}</div><div class="lbl">Years of experience</div></div>
+  <div class="stat"><div class="num">{{ lawyer.solved_cases }}</div><div class="lbl">Cases closed</div></div>
+  <div class="stat">
+    <div class="num">{{ lawyer.average_rating|default:"-" }}</div>
+    <div class="lbl">Average rating from {{ reviews|length }} review{{ reviews|length|pluralize }}</div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="panel">
+      <div class="panel-head"><h2>About</h2></div>
+      <div class="panel-body">{{ profile.bio|default:"This lawyer has not written a bio yet."|linebreaksbr }}</div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="panel">
+      <div class="panel-head"><h2>Reviews</h2></div>
+      <div class="panel-body flush">
+        {% for review in reviews %}
+          <div class="row-item">
+            <div class="grow">
+              <span class="stars">{{ review.rating|stars }}</span>
+              <div>{{ review.comment|default:"No comment." }}</div>
+              <div class="sub">{{ review.client.name }}, {{ review.created_at|date:"d M Y" }}</div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-star"></i>No reviews yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
