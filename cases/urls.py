@@ -15,4 +15,13 @@ urlpatterns = [
     path("cases/<int:case_pk>/hearings/add/", views.hearing_add, name="hearing_add"),
     path("hearings/<int:pk>/edit/", views.hearing_edit, name="hearing_edit"),
     path("hearings/<int:pk>/delete/", views.hearing_delete, name="hearing_delete"),
+    path("areas/", views.area_list, name="area_list"),
+    path("areas/new/", views.area_create, name="area_create"),
+    path("areas/<int:pk>/edit/", views.area_edit, name="area_edit"),
+    path("areas/<int:pk>/delete/", views.area_delete, name="area_delete"),
+    path("courts/", views.court_list, name="court_list"),
+    path("courts/new/", views.court_create, name="court_create"),
+    path("courts/<int:pk>/edit/", views.court_edit, name="court_edit"),
+    path("courts/<int:pk>/delete/", views.court_delete, name="court_delete"),
+    path("staff/", views.staff_list, name="staff_list"),
 ]

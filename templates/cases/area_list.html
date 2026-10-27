@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Areas{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Areas</h1><p class="sub">Districts or regions that courts belong to.</p></div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'cases:area_create' %}"><i class="bi bi-plus-lg"></i> Add area</a></div>
+</div>
+
+<div class="panel">
+  {% if areas %}
+    <table class="table-clean">
+      <thead><tr><th>Name</th><th>Courts</th><th></th></tr></thead>
+      <tbody>
+        {% for area in areas %}
+          <tr>
+            <td>{{ area.name }}</td>
+            <td>{{ area.court_total }}</td>
+            <td class="actions">
+              <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:area_edit' area.pk %}">Edit</a>
+              <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:area_delete' area.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty"><i class="bi bi-geo-alt"></i>No area yet. Add one before you add courts.</div>
+  {% endif %}
+</div>
+{% endblock %}

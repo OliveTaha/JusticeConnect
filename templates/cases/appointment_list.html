@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Appointments</h1><p class="sub">Meetings between you and the other side of your cases.</p></div>
+</div>
+
+{% if to_answer %}
+  <div class="panel callout">
+    <div class="panel-head"><h2>Waiting for your answer</h2></div>
+    <div class="panel-body flush">
+      {% for appointment in to_answer %}
+        <div class="row-item">
+          <div class="datebox"><b>{{ appointment.scheduled_at|date:"j" }}</b><small>{{ appointment.scheduled_at|date:"M" }}</small></div>
+          <div class="grow">
+            {{ appointment.purpose }}
+            <div class="sub">{{ appointment.created_by.display_name }} asked for {{ appointment.scheduled_at|date:"l, H:i" }} | case {{ appointment.case.case_number }}</div>
+          </div>
+          <div class="d-flex gap-2">
+            <form method="post" action="{% url 'cases:appointment_respond' appointment.pk 'confirm' %}">{% csrf_token %}<button class="btn btn-primary btn-sm">Confirm</button></form>
+            <form method="post" action="{% url 'cases:appointment_respond' appointment.pk 'decline' %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm">Decline</button></form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-head"><h2>All appointments</h2></div>
+  <div class="panel-body flush">
+    {% for appointment in appointments %}
+      <div class="row-item">
+        <div class="datebox {% if appointment.is_past %}past{% endif %}"><b>{{ appointment.scheduled_at|date:"j" }}</b><small>{{ appointment.scheduled_at|date:"M" }}</small></div>
+        <div class="grow">
+          {{ appointment.purpose }}
+          <div class="sub">{{ appointment.scheduled_at|date:"l, H:i" }} | <a href="{% url 'cases:detail' appointment.case.pk %}">{{ appointment.case.case_number }}</a> | asked by {{ appointment.created_by.display_name }}</div>
+        </div>
+        <span class="pill pill-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
+        {% if appointment.created_by == user %}
+          <div class="d-flex gap-2">
+            {% if appointment.status == "pending" %}<a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:appointment_edit' appointment.pk %}">Edit</a>{% endif %}
+            <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:appointment_delete' appointment.pk %}">Cancel</a>
+          </div>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div class="empty"><i class="bi bi-clock"></i>No appointment yet. You can ask for one on a case that has a lawyer.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
