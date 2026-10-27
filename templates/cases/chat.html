@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Chat with {{ other.display_name }}</h1>
+    <p class="sub">About <a href="{% url 'cases:detail' case_request.case.pk %}">{{ case_request.case.case_number }}, {{ case_request.case.title }}</a></p>
+  </div>
+  <span class="pill pill-{{ case_request.status }}">{{ case_request.get_status_display }}</span>
+</div>
+
+{% if case_request.status != "accepted" and case_request.chat_open %}
+  <div class="alert alert-warning"><i class="bi bi-shield-lock"></i> Phone numbers and email addresses are hidden until the client selects a lawyer.</div>
+{% endif %}
+
+<div class="panel">
+  <div class="chat" id="chat">
+    {% for message in chat_messages %}
+      <div class="bubble {% if message.sender == user %}mine{% endif %}">
+        {{ message.body }}
+        <small>{{ message.sender.display_name }}, {{ message.created_at|date:"d M, H:i" }}</small>
+      </div>
+    {% empty %}
+      <div class="empty"><i class="bi bi-chat-left-text"></i>No message yet. Say hello.</div>
+    {% endfor %}
+  </div>
+
+  {% if case_request.chat_open %}
+    <form method="post" class="panel-body" style="border-top: 1px solid var(--line)">
+      {% csrf_token %}
+      {{ form.body }}
+      {% for error in form.body.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      <button class="btn btn-primary mt-2">Send</button>
+    </form>
+  {% else %}
+    <div class="panel-body text-muted" style="border-top: 1px solid var(--line)">This chat is closed because the request is {{ case_request.get_status_display|lower }}.</div>
+  {% endif %}
+</div>
+<script>document.getElementById("chat").scrollTop = 99999;</script>
+{% endblock %}
