@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Lawyer approvals{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Lawyer approvals</h1><p class="sub">Check the Bar ID, then verify or reject the registration.</p></div>
+</div>
+
+<div class="panel">
+  {% if pending %}
+    <div class="table-wrap">
+      <table class="table-clean">
+        <thead><tr><th>Name</th><th>Bar ID</th><th>Email</th><th>Registered</th><th></th></tr></thead>
+        <tbody>
+          {% for lawyer in pending %}
+            <tr>
+              <td>{{ lawyer.name }}</td>
+              <td>{{ lawyer.bar_id }}</td>
+              <td>{{ lawyer.account.email }}</td>
+              <td>{{ lawyer.account.date_joined|date:"d M Y" }}</td>
+              <td class="actions">
+                <form method="post" action="{% url 'accounts:lawyer_verify' lawyer.pk %}" class="d-inline">
+                  {% csrf_token %}<button class="btn btn-primary btn-sm">Verify</button>
+                </form>
+                <form method="post" action="{% url 'accounts:lawyer_reject' lawyer.pk %}" class="d-inline" onsubmit="return confirm('Remove this registration?')">
+                  {% csrf_token %}<button class="btn btn-outline-danger btn-sm">Reject</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-patch-check"></i>No lawyer is waiting for approval.</div>
+  {% endif %}
+</div>
+{% endblock %}
