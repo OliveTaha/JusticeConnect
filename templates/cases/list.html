@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ title }}</h1></div>
+  <div class="page-actions">
+    {% if user.role == "court_staff" %}
+      <a class="btn btn-primary" href="{% url 'cases:create' %}"><i class="bi bi-plus-lg"></i> Register case</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" class="filters">
+  <div class="grow"><label class="form-label" for="{{ form.q.id_for_label }}">Search</label>{{ form.q }}</div>
+  <div><label class="form-label" for="{{ form.status.id_for_label }}">Status</label>{{ form.status }}</div>
+  <div><label class="form-label" for="{{ form.case_type.id_for_label }}">Type</label>{{ form.case_type }}</div>
+  <button class="btn btn-primary">Apply</button>
+  <a class="btn btn-link" href="{% url 'cases:list' %}">Clear</a>
+</form>
+
+<div class="panel">
+  {% if page %}
+    <div class="table-wrap">
+      <table class="table-clean">
+        <thead><tr><th>Case</th><th>Client</th><th>Lawyer</th><th>Status</th><th>Registered</th></tr></thead>
+        <tbody>
+          {% for case in page %}
+            <tr>
+              <td>
+                <a href="{% url 'cases:detail' case.pk %}">{{ case.title }}</a>
+                <div class="sub">{{ case.case_number }} | {{ case.get_case_type_display }}</div>
+              </td>
+              <td>{{ case.client.name }}</td>
+              <td>{{ case.assigned_lawyer.name|default:"-" }}</td>
+              <td><span class="pill pill-{{ case.status }}">{{ case.get_status_display }}</span></td>
+              <td>{{ case.created_at|date:"d M Y" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty">
+      <i class="bi bi-folder2-open"></i>
+      No case matches.
+      {% if user.role == "court_staff" %}<div class="mt-2"><a href="{% url 'cases:create' %}">Register the first case</a></div>{% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
