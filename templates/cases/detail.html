@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ case.case_number }}{% endblock %}
+
+{% block content %}
+<div class="docket">
+  <div>
+    <span class="no">{{ case.case_number }}</span>
+    <span class="pill pill-{{ case.status }}">{{ case.get_status_display }}</span>
+  </div>
+  <h1>{{ case.title }}</h1>
+
+  <dl class="meta">
+    <div><dt>Court</dt><dd>{{ case.court.name }}</dd></div>
+    <div><dt>Type</dt><dd>{{ case.get_case_type_display }}</dd></div>
+    <div><dt>Client</dt><dd>{{ case.client.name }}</dd></div>
+    <div><dt>Lawyer</dt><dd>{% if case.assigned_lawyer %}<a href="{% url 'accounts:lawyer_detail' case.assigned_lawyer.pk %}">{{ case.assigned_lawyer.name }}</a>{% else %}Not chosen yet{% endif %}</dd></div>
+    <div><dt>Registered</dt><dd>{{ case.created_at|date:"d M Y" }}</dd></div>
+  </dl>
+
+  <ol class="steps">
+    {% for step in steps %}<li class="{{ step.state }}">{{ step.label }}</li>{% endfor %}
+  </ol>
+
+  {% if is_staff and case.status == "registered" or is_staff and case.status == "open" or is_lawyer and case.status == "assigned" %}
+    <div class="docket-actions">
+      {% if is_staff %}
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:edit' case.pk %}"><i class="bi bi-pencil"></i> Edit</a>
+        <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:delete' case.pk %}"><i class="bi bi-trash"></i> Delete</a>
+      {% endif %}
+      {% if is_lawyer and case.status == "assigned" %}
+        <form method="post" action="{% url 'cases:close' case.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary btn-sm"><i class="bi bi-check2-circle"></i> Mark case as closed</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+
+    {% if is_client and not case.consent %}
+      <div class="panel callout">
+        <div class="panel-body">
+          <h2 class="h5">Your consent is needed</h2>
+          <p>The court registered this case for you. Lawyers cannot see it until you agree to share it with them.</p>
+          <form method="post" action="{% url 'cases:consent' case.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-primary">I agree, share this case with lawyers</button>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if verify_link %}
+      <div class="panel callout">
+        <div class="panel-body">
+          <h2 class="h5">The client has not opened the account yet</h2>
+          <p class="mb-1">Send this link to {{ case.client.name }}. It lets the client set a password.</p>
+          <code>{{ verify_link }}</code>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><h2>What the case is about</h2></div>
+      <div class="panel-body">{{ case.description|linebreaksbr }}</div>
+    </div>
+
+    {% if user.role == "lawyer" and not is_lawyer %}
+      <div class="panel">
+        <div class="panel-head"><h2>Your request</h2></div>
+        <div class="panel-body">
+          {% if my_request %}
+            <p>Status: <span class="pill pill-{{ my_request.status }}">{{ my_request.get_status_display }}</span></p>
+            {% if my_request.chat_open %}
+              <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:chat' my_request.pk %}"><i class="bi bi-chat-left-text"></i> Open chat with the client{% if my_request.unread_for_lawyer %} <span class="badge text-bg-success">{{ my_request.unread_for_lawyer }}</span>{% endif %}</a>
+            {% endif %}
+          {% elif case.status == "open" %}
+            <form method="post" action="{% url 'cases:request_send' case.pk %}">
+              {% csrf_token %}
+              <label class="form-label" for="message">Message to the client</label>
+              <textarea id="message" name="message" rows="3" class="form-control mb-3" placeholder="Tell the client why you are a good fit (optional)"></textarea>
+              <button class="btn btn-primary">Request this case</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if is_client and case.consent %}
+      <div class="panel">
+        <div class="panel-head"><h2>Lawyer requests</h2></div>
+        <div class="panel-body flush">
+          {% for req in case.requests.all %}
+            <div class="row-item">
+              <span class="avatar">{{ req.lawyer.name|initials }}</span>
+              <div class="grow">
+                <a href="{% url 'accounts:lawyer_detail' req.lawyer.pk %}">{{ req.lawyer.name }}</a>
+                <span class="pill pill-{{ req.status }} ms-1">{{ req.get_status_display }}</span>
+                <div class="sub">{{ req.message|default:"No message." }}</div>
+              </div>
+              <div class="d-flex gap-2">
+                {% if req.chat_open %}
+                  <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:chat' req.pk %}"><i class="bi bi-chat-left-text"></i> Chat{% if req.unread_for_client %} <span class="badge text-bg-success">{{ req.unread_for_client }}</span>{% endif %}</a>
+                {% endif %}
+                {% if req.status == "pending" and case.status == "open" %}
+                  <form method="post" action="{% url 'cases:request_accept' req.pk %}">{% csrf_token %}<button class="btn btn-primary btn-sm">Select</button></form>
+                  <form method="post" action="{% url 'cases:request_reject' req.pk %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm">Reject</button></form>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <div class="empty"><i class="bi bi-person-raised-hand"></i>No lawyer has asked for this case yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Hearings</h2>
+        {% if is_staff and case.status != "closed" %}
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:hearing_add' case.pk %}"><i class="bi bi-plus-lg"></i> Add hearing</a>
+        {% endif %}
+      </div>
+      <div class="panel-body flush">
+        {% for hearing in hearings %}
+          <div class="row-item">
+            <div class="datebox {% if hearing.is_past %}past{% endif %}"><b>{{ hearing.scheduled_at|date:"j" }}</b><small>{{ hearing.scheduled_at|date:"M" }}</small></div>
+            <div class="grow">
+              {{ hearing.title }}
+              <div class="sub">{{ hearing.scheduled_at|date:"l, H:i" }}{% if hearing.room %}, {{ hearing.room }}{% endif %}{% if hearing.note %} | {{ hearing.note }}{% endif %}</div>
+            </div>
+            {% if is_staff %}
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:hearing_edit' hearing.pk %}">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:hearing_delete' hearing.pk %}">Delete</a>
+              </div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-calendar2"></i>No hearing date yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Documents</h2>
+        {% if can_add_document %}
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:document_add' case.pk %}"><i class="bi bi-upload"></i> Upload</a>
+        {% endif %}
+      </div>
+      <div class="panel-body flush">
+        {% for doc in case.documents.all %}
+          <div class="row-item">
+            <span class="filebox"><i class="bi {% if doc.extension == 'pdf' %}bi-file-earmark-pdf{% elif doc.extension in 'jpg jpeg png' %}bi-file-earmark-image{% else %}bi-file-earmark-text{% endif %}"></i></span>
+            <div class="grow">
+              <a href="{% url 'cases:document_download' doc.pk %}">{{ doc.title }}</a>
+              <div class="sub">{{ doc.filename }} | {{ doc.uploaded_by.display_name }}, {{ doc.uploaded_at|date:"d M Y" }}</div>
+            </div>
+            {% if doc.uploaded_by == user or is_staff %}
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:document_edit' doc.pk %}">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:document_delete' doc.pk %}">Delete</a>
+              </div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-file-earmark"></i>No document uploaded.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if is_client or is_lawyer %}
+      {% if case.status == "assigned" or appointments %}
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Appointments</h2>
+            {% if case.status == "assigned" %}
+              <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:appointment_add' case.pk %}"><i class="bi bi-plus-lg"></i> New appointment</a>
+            {% endif %}
+          </div>
+          <div class="panel-body flush">
+            {% for appointment in appointments %}
+              <div class="row-item">
+                <div class="datebox {% if appointment.is_past %}past{% endif %}"><b>{{ appointment.scheduled_at|date:"j" }}</b><small>{{ appointment.scheduled_at|date:"M" }}</small></div>
+                <div class="grow">{{ appointment.purpose }}<div class="sub">{{ appointment.scheduled_at|date:"l, H:i" }}</div></div>
+                <span class="pill pill-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
+              </div>
+            {% empty %}
+              <div class="empty"><i class="bi bi-clock"></i>No appointment yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>My private notes</h2>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:note_add' case.pk %}"><i class="bi bi-plus-lg"></i> Add note</a>
+      </div>
+      <div class="panel-body flush">
+        {% for note in notes %}
+          <div class="row-item">
+            <div class="grow">{{ note.text|linebreaksbr }}<div class="sub">{{ note.updated_at|date:"d M Y, H:i" }}</div></div>
+            <div class="d-flex gap-2">
+              <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:note_edit' note.pk %}">Edit</a>
+              <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:note_delete' note.pk %}">Delete</a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty"><i class="bi bi-journal-text"></i>Only you can see notes written here.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if case.status == "closed" and case.assigned_lawyer %}
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Review</h2>
+          {% if is_client and not review %}
+            <a class="btn btn-primary btn-sm" href="{% url 'cases:review_add' case.pk %}"><i class="bi bi-star"></i> Rate your lawyer</a>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          {% if review %}
+            <span class="stars">{{ review.rating|stars }}</span>
+            <p class="mb-1">{{ review.comment|default:"No comment." }}</p>
+            {% if is_client %}
+              <a href="{% url 'cases:review_edit' review.pk %}">Edit</a> |
+              <a href="{% url 'cases:review_delete' review.pk %}">Delete</a>
+            {% endif %}
+          {% else %}
+            <span class="text-muted">The client has not rated the lawyer yet.</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="panel">
+      <div class="panel-head"><h2>Timeline</h2></div>
+      <div class="panel-body">
+        <ul class="timeline">
+          {% for event in events %}
+            <li>{{ event.text }}<time>{{ event.created_at|date:"d M Y, H:i" }}</time></li>
+          {% empty %}
+            <li>Nothing has happened yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
