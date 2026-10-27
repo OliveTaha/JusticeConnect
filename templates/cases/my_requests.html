@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}My requests{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>My requests</h1><p class="sub">Cases you asked for and the answer so far.</p></div>
+</div>
+
+<div class="panel">
+  {% if requests %}
+    <div class="table-wrap">
+      <table class="table-clean">
+        <thead><tr><th>Case</th><th>My message</th><th>Status</th><th>Sent</th><th></th></tr></thead>
+        <tbody>
+          {% for req in requests %}
+            <tr>
+              <td><a href="{% url 'cases:detail' req.case.pk %}">{{ req.case.title }}</a><div class="sub">{{ req.case.case_number }}</div></td>
+              <td>{{ req.message|default:"-"|truncatechars:60 }}</td>
+              <td><span class="pill pill-{{ req.status }}">{{ req.get_status_display }}</span></td>
+              <td>{{ req.requested_at|date:"d M Y" }}</td>
+              <td class="actions">
+                {% if req.chat_open %}<a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:chat' req.pk %}">Chat{% if req.unread_for_lawyer %} <span class="badge text-bg-success">{{ req.unread_for_lawyer }}</span>{% endif %}</a>{% endif %}
+                {% if req.status == "pending" %}
+                  <form method="post" action="{% url 'cases:request_withdraw' req.pk %}" class="d-inline" onsubmit="return confirm('Withdraw this request?')">
+                    {% csrf_token %}<button class="btn btn-outline-danger btn-sm">Withdraw</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-person-raised-hand"></i>You have not requested a case yet.<div class="mt-2"><a href="{% url 'cases:available' %}">Browse open cases</a></div></div>
+  {% endif %}
+</div>
+{% endblock %}
