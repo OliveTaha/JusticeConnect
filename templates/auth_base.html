@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}Justice Connect{% endblock %} | Justice Connect</title>
+</head>
+<body>
+<div class="auth">
+  <section class="auth-aside">
+    <div class="brand"><b>Justice Connect</b><span>Case management for courts</span></div>
+    <div>
+      <h2>Every case finds a lawyer, with the client's consent.</h2>
+      <ol>
+        <li>The court registers the case and the client agrees to share it.</li>
+        <li>Verified lawyers send a request.</li>
+        <li>The client talks to them and chooses one.</li>
+      </ol>
+    </div>
+    <small>Court staff, clients and lawyers all use the same place.</small>
+  </section>
+
+  <section class="auth-main">
+    <div class="auth-card">
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">{{ message }}</div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </div>
+  </section>
+</div>
+</body>
+</html>
