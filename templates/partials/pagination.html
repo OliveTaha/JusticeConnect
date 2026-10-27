@@ -1,0 +1,11 @@
+{% if page.has_other_pages %}
+  <nav class="pager">
+    {% if page.has_previous %}
+      <a href="?{% if page.query %}{{ page.query }}&{% endif %}page={{ page.previous_page_number }}"><i class="bi bi-chevron-left"></i> Previous</a>
+    {% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}
+      <a href="?{% if page.query %}{{ page.query }}&{% endif %}page={{ page.next_page_number }}">Next <i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </nav>
+{% endif %}
