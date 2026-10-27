@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Lawyers{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Lawyers</h1><p class="sub">Verified lawyers on Justice Connect.</p></div>
+</div>
+
+<form method="get" class="filters">
+  <div class="grow">
+    <label class="form-label" for="{{ form.q.id_for_label }}">Search</label>
+    {{ form.q }}
+  </div>
+  <div>
+    <label class="form-label" for="{{ form.sort.id_for_label }}">Sort by</label>
+    {{ form.sort }}
+  </div>
+  <button class="btn btn-primary">Apply</button>
+  <a class="btn btn-link" href="{% url 'accounts:lawyer_list' %}">Clear</a>
+</form>
+
+{% if page %}
+  <div class="people">
+    {% for lawyer in page %}
+      <a class="person" href="{% url 'accounts:lawyer_detail' lawyer.pk %}">
+        <span class="avatar lg">
+          {% if lawyer.account.profile.photo %}<img src="{{ lawyer.account.profile.photo.url }}" alt="">{% else %}{{ lawyer.name|initials }}{% endif %}
+        </span>
+        <h3>{{ lawyer.name }}</h3>
+        <span class="sub">{{ lawyer.account.profile.specialization|default:"General practice" }}</span>
+        <span class="sub">{{ lawyer.account.profile.experience }} years of experience</span>
+        <span>
+          {% if lawyer.rating %}
+            <span class="stars">{{ lawyer.rating|floatformat:0|stars }}</span> {{ lawyer.rating|floatformat:1 }}
+            <span class="sub">({{ lawyer.review_total }})</span>
+          {% else %}
+            <span class="sub">No reviews yet</span>
+          {% endif %}
+        </span>
+      </a>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+{% endif %}
+{% if not page %}
+  <div class="panel"><div class="empty"><i class="bi bi-people"></i>No lawyer matches your search.</div></div>
+{% endif %}
+{% endblock %}
