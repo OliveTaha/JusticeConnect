@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Court report{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Court report</h1><p class="sub">{{ court.name }}, {{ total }} case{{ total|pluralize }} in total.</p></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel">
+      <div class="panel-head"><h2>Cases by status</h2></div>
+      <div class="panel-body">
+        {% for bar in status_bars %}
+          <div class="bar-row">
+            <span>{{ bar.label }}</span>
+            <div class="bar-track"><div class="bar-fill {{ bar.key }}" style="width: {{ bar.percent }}%"></div></div>
+            <span class="bar-count">{{ bar.count }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel">
+      <div class="panel-head"><h2>Cases by type</h2></div>
+      <div class="panel-body">
+        {% for bar in type_bars %}
+          <div class="bar-row">
+            <span>{{ bar.label }}</span>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ bar.percent }}%"></div></div>
+            <span class="bar-count">{{ bar.count }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <div class="panel-head"><h2>Newest cases</h2></div>
+      <div class="panel-body flush">
+        {% for case in recent %}
+          <div class="row-item"><div class="grow"><a href="{% url 'cases:detail' case.pk %}">{{ case.title }}</a><div class="sub">{{ case.case_number }}, {{ case.client.name }}</div></div></div>
+        {% empty %}
+          <div class="empty">No case yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel">
+      <div class="panel-head"><h2>Next hearings</h2></div>
+      <div class="panel-body flush">
+        {% for hearing in hearings %}
+          <div class="row-item">
+            <div class="datebox"><b>{{ hearing.scheduled_at|date:"j" }}</b><small>{{ hearing.scheduled_at|date:"M" }}</small></div>
+            <div class="grow">{{ hearing.title }}<div class="sub">{{ hearing.case.case_number }}</div></div>
+          </div>
+        {% empty %}
+          <div class="empty">No hearing is scheduled.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel">
+      <div class="panel-head"><h2>Busiest lawyers</h2></div>
+      <div class="panel-body flush">
+        {% for lawyer in lawyers %}
+          <div class="row-item"><div class="grow"><a href="{% url 'accounts:lawyer_detail' lawyer.pk %}">{{ lawyer.name }}</a></div><span class="bar-count">{{ lawyer.total }}</span></div>
+        {% empty %}
+          <div class="empty">No lawyer works on a case yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
