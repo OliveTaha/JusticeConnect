@@ -25,3 +25,21 @@ class DocumentForm(StyledModelForm):
         return file
 
 
+class ReviewForm(StyledModelForm):
+    rating = forms.TypedChoiceField(
+        coerce=int,
+        choices=[(5, "5 - Excellent"), (4, "4 - Good"), (3, "3 - Fair"), (2, "2 - Poor"), (1, "1 - Very poor")],
+    )
+
+    class Meta:
+        model = Review
+        fields = ["rating", "comment"]
+        widgets = {"comment": forms.Textarea(attrs={"rows": 4, "placeholder": "How was your experience? (optional)"})}
+
+
+class NoteForm(StyledModelForm):
+    class Meta:
+        model = CaseNote
+        fields = ["text"]
+        labels = {"text": "Your private note"}
+        widgets = {"text": forms.Textarea(attrs={"rows": 4})}

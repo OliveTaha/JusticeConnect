@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Lawyer requests{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Lawyer requests</h1><p class="sub">Every lawyer who asked to take one of your cases.</p></div>
+</div>
+
+<div class="panel">
+  {% if requests %}
+    <div class="table-wrap">
+      <table class="table-clean">
+        <thead><tr><th>Lawyer</th><th>Case</th><th>Status</th><th>Sent</th><th></th></tr></thead>
+        <tbody>
+          {% for req in requests %}
+            <tr>
+              <td><a href="{% url 'accounts:lawyer_detail' req.lawyer.pk %}">{{ req.lawyer.name }}</a><div class="sub">{{ req.message|default:"No message."|truncatechars:50 }}</div></td>
+              <td><a href="{% url 'cases:detail' req.case.pk %}">{{ req.case.case_number }}</a></td>
+              <td><span class="pill pill-{{ req.status }}">{{ req.get_status_display }}</span></td>
+              <td>{{ req.requested_at|date:"d M Y" }}</td>
+              <td class="actions">
+                {% if req.chat_open %}
+                  <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:chat' req.pk %}">Chat{% if req.unread_for_client %} <span class="badge text-bg-success">{{ req.unread_for_client }}</span>{% endif %}</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-person-raised-hand"></i>No lawyer has asked for your cases yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
