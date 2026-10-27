@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Open cases{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Open cases</h1><p class="sub">The client agreed to share these cases. Send a request to the ones you can take.</p></div>
+</div>
+
+<form method="get" class="filters">
+  <div class="grow"><label class="form-label" for="{{ form.q.id_for_label }}">Search</label>{{ form.q }}</div>
+  <div><label class="form-label" for="{{ form.case_type.id_for_label }}">Type</label>{{ form.case_type }}</div>
+  <button class="btn btn-primary">Apply</button>
+  <a class="btn btn-link" href="{% url 'cases:available' %}">Clear</a>
+</form>
+
+<div class="panel">
+  {% if page %}
+    {% for case in page %}
+      <div class="row-item">
+        <div class="grow">
+          <a href="{% url 'cases:detail' case.pk %}">{{ case.title }}</a>
+          <div class="sub">{{ case.case_number }} | {{ case.get_case_type_display }} | {{ case.court.name }}</div>
+          <div class="sub">{{ case.description|truncatechars:140 }}</div>
+        </div>
+        {% if case.pk in requested_ids %}
+          <span class="pill pill-pending">Requested</span>
+        {% else %}
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:detail' case.pk %}">View and request</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty"><i class="bi bi-search"></i>No open case matches. Check again later.</div>
+  {% endif %}
+</div>
+{% endblock %}
