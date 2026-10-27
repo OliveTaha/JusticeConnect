@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Notifications</h1></div>
+  <div class="page-actions">
+    {% if only_unread %}
+      <a class="btn btn-outline-secondary" href="{% url 'notifications:list' %}">Show all</a>
+    {% else %}
+      <a class="btn btn-outline-secondary" href="{% url 'notifications:list' %}?show=unread">Only unread</a>
+    {% endif %}
+    <form method="post" action="{% url 'notifications:mark_all_read' %}">{% csrf_token %}<button class="btn btn-outline-secondary">Mark all as read</button></form>
+    <form method="post" action="{% url 'notifications:clear_read' %}" onsubmit="return confirm('Remove all read notifications?')">{% csrf_token %}<button class="btn btn-outline-danger">Clear read</button></form>
+  </div>
+</div>
+
+<div class="panel">
+  {% if page %}
+    {% for note in page %}
+      <div class="row-item" {% if not note.is_read %}style="background: #fbfcf6"{% endif %}>
+        <i class="bi {{ note.icon }}" style="color: var(--ink-soft); font-size: 1.15rem"></i>
+        <div class="grow">
+          <a href="{% url 'notifications:open' note.pk %}" {% if not note.is_read %}style="font-weight: 600"{% endif %}>{{ note.message }}</a>
+          <div class="sub">{{ note.created_at|date:"d M Y, H:i" }}{% if note.case %} | case {{ note.case.case_number }}{% endif %}</div>
+        </div>
+        <form method="post" action="{% url 'notifications:delete' note.pk %}">{% csrf_token %}<button class="btn btn-link btn-sm" aria-label="Delete"><i class="bi bi-x-lg"></i></button></form>
+      </div>
+    {% endfor %}
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty"><i class="bi bi-bell"></i>{% if only_unread %}You have read everything.{% else %}No notifications yet.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}
