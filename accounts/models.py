@@ -24,6 +24,22 @@ class Account(AbstractUser):
     def __str__(self):
         return self.username
 
+    def verify_account(self):
+        self.is_verified = True
+        self.save()
+
+    @property
+    def display_name(self):
+        # the real name lives on Client / Lawyer / CourtStaff, so look there first
+        if self.role == self.CLIENT and hasattr(self, "client"):
+            return self.client.name
+        if self.role == self.LAWYER and hasattr(self, "lawyer"):
+            return self.lawyer.name
+        if self.role == self.COURT_STAFF and hasattr(self, "staff"):
+            return self.staff.name
+        return self.username
+
+
 class Client(models.Model):
     account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name="client")
     name = models.CharField(max_length=100)
@@ -47,30 +63,46 @@ class Client(models.Model):
             raise PermissionError("This is not your case.")
         case_request.accept()
 
-        class Lawyer(models.Model):
-            account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name="lawyer")
-            name = models.CharField(max_length=100)
-            bar_id = models.CharField(max_length=50, unique=True)
 
-            def __str__(self):
-                return self.name
+class Lawyer(models.Model):
+    account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name="lawyer")
+    name = models.CharField(max_length=100)
+    bar_id = models.CharField(max_length=50, unique=True)
 
-            def view_cases(self):
-                from cases.models import Case
+    def __str__(self):
+        return self.name
 
-                # open cases = client already gave consent and no lawyer yet
-                return Case.objects.filter(status=Case.OPEN)
+    def view_cases(self):
+        from cases.models import Case
 
-            def request_case(self, case, message=""):
-                from cases.models import CaseRequest
+        # open cases = client already gave consent and no lawyer yet
+        return Case.objects.filter(status=Case.OPEN)
 
-                return CaseRequest.submit_request(case, self, message)
+    def request_case(self, case, message=""):
+        from cases.models import CaseRequest
 
-            @property
-            def average_rating(self):
-                average = self.reviews.aggregate(avg=Avg("rating"))["avg"]
-                return round(average, 1) if average else None
+        return CaseRequest.submit_request(case, self, message)
 
-            @property
-            def solved_cases(self):
-                return self.assigned_cases.filter(status="closed").count()
+    @property
+    def average_rating(self):
+        average = self.reviews.aggregate(avg=Avg("rating"))["avg"]
+        return round(average, 1) if average else None
+
+    @property
+    def solved_cases(self):
+        return self.assigned_cases.filter(status="closed").count()
+
+
+class Profile(models.Model):
+    account = models.OneToOneField(Account, on_delete=models.CASCADE, related_name="profile")
+    name = models.CharField(max_length=100)
+    specialization = models.CharField(max_length=100, blank=True)
+    experience = models.PositiveIntegerField(default=0)
+    bio = models.TextField(blank=True)
+    photo = models.ImageField(upload_to="profiles/", blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def view_profile(self):
+        return self
