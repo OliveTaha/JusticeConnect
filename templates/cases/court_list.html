@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Courts{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Courts</h1></div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'cases:court_create' %}"><i class="bi bi-plus-lg"></i> Add court</a></div>
+</div>
+
+<div class="panel">
+  {% if courts %}
+    <div class="table-wrap">
+      <table class="table-clean">
+        <thead><tr><th>Court</th><th>Area</th><th>Cases</th><th>Staff</th><th></th></tr></thead>
+        <tbody>
+          {% for court in courts %}
+            <tr>
+              <td>{{ court.name }}<div class="sub">{{ court.address }}</div></td>
+              <td>{{ court.area.name }}</td>
+              <td>{{ court.case_total }}</td>
+              <td>{{ court.staff_total }}</td>
+              <td class="actions">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:court_edit' court.pk %}">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:court_delete' court.pk %}">Delete</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-bank"></i>No court yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

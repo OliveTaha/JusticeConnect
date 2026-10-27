@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Court holidays{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Court holidays</h1><p class="sub">{{ court.name }} is closed on these days. Hearings cannot be set on them.</p></div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'cases:holiday_add' %}"><i class="bi bi-plus-lg"></i> Add holiday</a></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Coming up</h2></div>
+  {% if upcoming %}
+    <table class="table-clean">
+      <thead><tr><th>Date</th><th>Reason</th><th></th></tr></thead>
+      <tbody>
+        {% for holiday in upcoming %}
+          <tr>
+            <td>{{ holiday.date|date:"l, d M Y" }}</td>
+            <td>{{ holiday.reason }}</td>
+            <td class="actions">
+              <a class="btn btn-outline-secondary btn-sm" href="{% url 'cases:holiday_edit' holiday.pk %}">Edit</a>
+              <a class="btn btn-outline-danger btn-sm" href="{% url 'cases:holiday_delete' holiday.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty"><i class="bi bi-calendar-x"></i>No holiday is marked.</div>
+  {% endif %}
+</div>
+
+{% if past %}
+<div class="panel">
+  <div class="panel-head"><h2>Earlier</h2></div>
+  <table class="table-clean">
+    <tbody>
+      {% for holiday in past %}
+        <tr><td>{{ holiday.date|date:"d M Y" }}</td><td>{{ holiday.reason }}</td>
+          <td class="actions"><a class="btn btn-outline-danger btn-sm" href="{% url 'cases:holiday_delete' holiday.pk %}">Delete</a></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
